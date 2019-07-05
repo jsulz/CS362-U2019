@@ -60,20 +60,20 @@ int main(int argc, char* argv[]) {
 	int gameStarted = FALSE;
 	int turnNum = 0;
 
+	if(argc != 2){
+		printf("Usage: player [integer random number seed]\n");
+		return EXIT_SUCCESS;
+	}
+
 	int randomSeed = atoi(argv[1]);
 
 	//Default cards, as defined in playDom
-	int kCards[10] = {adventurer, gardens, embargo, village, minion, mine, cutpurse, sea_hag, tribute, smithy};
+	int kCards[10] = {ambassador, baron, embargo, village, minion, mine, cutpurse, sea_hag, tribute, smithy};
 
 	struct gameState g;
 	struct gameState * game = &g;
 
 	memset(game,0,sizeof(struct gameState));
-		
-	if(argc != 2){
-		printf("Usage: player [integer random number seed]\n");
-		return EXIT_SUCCESS;
-	}
 
 	if(randomSeed <= 0){
 		printf("Usage: player [integer random number seed]\n");
