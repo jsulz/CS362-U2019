@@ -700,7 +700,7 @@ int playBaron( struct gameState *state, int currentPlayer, int choice1 ){
   else{
 
     /* 
-      Bug #1 - changed value being compared from 0 to 1 so that it's possible to not pick up an estate card
+      Bug #2 - changed value being compared from 0 to 1 so that it's possible to not pick up an estate card
       even though one may be available.
      */
 
@@ -788,8 +788,7 @@ int playAmbassador( struct gameState *state, int currentPlayer, int handPos, int
   }
 
   for (int i = 0; i < state->handCount[currentPlayer]; i++) {
-    // Updated this code so that it would allow the function to run
-    if (i != handPos && state->hand[currentPlayer][i] == state->hand[currentPlayer][choice1] ) {
+    if (i != handPos && i == state->hand[currentPlayer][choice1] && i != choice1 ) {
       j++;
     }
   }
@@ -880,8 +879,7 @@ int playTribute( struct gameState *state, int currentPlayer, int nextPlayer, int
     tributeRevealedCards[1] = -1;
   }
 
-  // Fixed this loop so that it doesn't go out of bounds
-  for (int i = 0; i < 2; i ++){
+  for (int i = 0; i <= 2; i ++){
     /*
       Bug #1: Remove the check to see if the card is of type "gold"
      */
@@ -897,9 +895,7 @@ int playTribute( struct gameState *state, int currentPlayer, int nextPlayer, int
     }
     else{//Action Card
       // fixed this so that we check to make sure this wasn't flagged for being a duplicate
-      if( tributeRevealedCards[i] != -1 ){
-        state->numActions = state->numActions + 2;
-      }
+      state->numActions = state->numActions + 2;
     }
   }
  
@@ -924,7 +920,7 @@ int playMine( struct gameState *state, int currentPlayer, int handPos, int choic
   if (choice2 > treasure_map ) {
     return -1;
   }
-
+  
   if ( (getCost(state->hand[currentPlayer][choice1]) + 3) < getCost(choice2) ) {
     return -1;
   }
