@@ -1,3 +1,8 @@
+/*
+    Author: Jared Sulzdorf
+    Test covers: shuffle() function in dominion.c
+ */
+
 #include "dominion.h"
 #include "dominion_helpers.h"
 #include "rngs.h"
@@ -41,6 +46,7 @@ int main(){
     for( int i = 0; i < 10; i++ ){
         if( cards[i] != game.deck[0][i] ){
             flag = 1;
+            break;
         }
     }
     result = flag;
@@ -54,6 +60,7 @@ int main(){
     for( int i = 10; i < 20; i++ ){
         if( cards[i] != game.deck[1][i] ){
             flag = 1;
+            break;
         }
     }
     result = flag;
