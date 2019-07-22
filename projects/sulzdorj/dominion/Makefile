@@ -1,4 +1,4 @@
-CFLAGS= -Wall -fpic -coverage -lm -std=c99
+CFLAGS= -Wall -fpic -coverage -lm -std=c99 
 
 rngs.o: rngs.h rngs.c
 	gcc -c rngs.c -g  $(CFLAGS)
@@ -25,9 +25,9 @@ interface.o: interface.h interface.c
 	gcc -c interface.c -g  $(CFLAGS)
 
 runtests: testDrawCard 
-	./testDrawCard &> unittestresult.out
-	gcov dominion.c >> unittestresult.out
-	cat dominion.c.gcov >> unittestresult.out
+	./testDrawCard &> unittestresults.out
+	gcov dominion.c >> unittestresults.out
+	cat dominion.c.gcov >> unittestresults.out
 
 customAssert.o: customAssert.h customassert.c
 	gcc -c customAssert.c -g $(CFLAGS)
@@ -64,48 +64,48 @@ unittest5: unittest5.c customAssert.o dominion.o rngs.o
 
 unittestresults: cardtest1 cardtest2 cardtest3 cardtest4 cardtest5 unittest1 unittest2 unittest3 unittest4 unittest5
 
-	echo "cardtest1: " >> unittestresult.out
-	./cardtest1 >> unittestresult.out
-	echo >> unittestresult.out
+	echo "cardtest1: " >> unittestresults.out
+	./cardtest1 >> unittestresults.out
+	echo >> unittestresults.out
 
-	echo "cardtest2: " >> unittestresult.out
-	./cardtest2 >> unittestresult.out
-	echo >> unittestresult.out
+	echo "cardtest2: " >> unittestresults.out
+	./cardtest2 >> unittestresults.out
+	echo >> unittestresults.out
 
-	echo "cardtest3: " >> unittestresult.out
-	./cardtest3 >> unittestresult.out
-	echo >> unittestresult.out
+	echo "cardtest3: " >> unittestresults.out
+	./cardtest3 >> unittestresults.out
+	echo >> unittestresults.out
 
-	echo "cardtest4: " >> unittestresult.out
-	./cardtest4 >> unittestresult.out
-	echo >> unittestresult.out
+	echo "cardtest4: " >> unittestresults.out
+	./cardtest4 >> unittestresults.out
+	echo >> unittestresults.out
 
-	echo "cardtest5: " >> unittestresult.out
-	./cardtest5 >> unittestresult.out
-	echo >> unittestresult.out
+	echo "cardtest5: " >> unittestresults.out
+	./cardtest5 >> unittestresults.out
+	echo >> unittestresults.out
 
-	echo "unittest1: " >> unittestresult.out
-	./unittest1 >> unittestresult.out
-	echo >> unittestresult.out
+	echo "unittest1: " >> unittestresults.out
+	./unittest1 >> unittestresults.out
+	echo >> unittestresults.out
 
-	echo "unittest2: " >> unittestresult.out
-	./unittest2 >> unittestresult.out
-	echo >> unittestresult.out
+	echo "unittest2: " >> unittestresults.out
+	./unittest2 >> unittestresults.out
+	echo >> unittestresults.out
 
-	echo "unittest3: " >> unittestresult.out
-	./unittest3 >> unittestresult.out
-	echo >> unittestresult.out
+	echo "unittest3: " >> unittestresults.out
+	./unittest3 >> unittestresults.out
+	echo >> unittestresults.out
 
-	echo "unittest4: " >> unittestresult.out
-	./unittest4 >> unittestresult.out
-	echo >> unittestresult.out
+	echo "unittest4: " >> unittestresults.out
+	./unittest4 >> unittestresults.out
+	echo >> unittestresults.out
 
-	echo "unittest5: " >> unittestresult.out
-	./unittest5 >> unittestresult.out
-	echo >> unittestresult.out
+	echo "unittest5: " >> unittestresults.out
+	./unittest5 >> unittestresults.out
+	echo >> unittestresults.out
 
-	gcov -f -b dominion.c >> unittestresult.out
-	cat dominion.c.gcov >> unittestresult.out
+	gcov -f -b dominion.c >> unittestresults.out
+	cat dominion.c.gcov >> unittestresults.out
 
 player: player.c interface.o
 	gcc -o player player.c -g  dominion.o rngs.o interface.o $(CFLAGS)

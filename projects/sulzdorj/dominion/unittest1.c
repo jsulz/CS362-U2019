@@ -2,6 +2,7 @@
     Author: Jared Sulzdorf
     Test covers: playBaron() function in dominion.c
  */
+
 #include "dominion.h"
 #include "dominion_helpers.h"
 #include "rngs.h"
