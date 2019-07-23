@@ -9,8 +9,5 @@ unittestresults: testme
 	echo "testme: " >> unittestresults.out
 	./testme >> unittestresults.out
 
-	gcov -f -b testme.c >> unittestresults.out
-	cat testme.c.gcov >> unittestresults.out
-
 clean:
 	rm -f *.o *.gcov *.gcda *.gcno *.so *.out *.dSYM testme
