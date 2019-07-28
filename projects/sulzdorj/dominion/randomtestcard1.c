@@ -13,7 +13,9 @@
 #include "customAssert.h"
 #include <limits.h>
 
-
+/*
+    A struct that we use to note if a value in the gameState struct is off.
+ */
 struct checker {
     int numActionCheck;
     int numCoinCheck;
@@ -27,24 +29,40 @@ struct checker {
     int handCheck;
 };
 
+/*
+    Function that takes in the previous game state (after updating it with the oracle function),
+    the game state after playing the card with the cardEffect() function, and the checker struct.
+    Where the structs do not match, we increment a variable in the checker struct so that we can keep 
+    track of how the test failed. 
+ */
 void compareStructs( struct gameState *prevGame, struct gameState *postGame, struct checker *infoHolder ){
 
+    // If the number of actions between the two structs is different
+    // Then capture that in the checker struct
     if( prevGame->numActions != postGame->numActions ){
         infoHolder->numActionCheck++;
     }
 
+    // If the number of coins between the two structs is different
+    // Then capture that in the checker struct
     if( prevGame->coins != postGame->coins ){
         infoHolder->numCoinCheck++;
     }
 
+    // If the number of buys between the two structs is different
+    // Then capture that in the checker struct 
     if( prevGame->numBuys != postGame->numBuys ){
         infoHolder->numBuysCheck++;
     }
 
+    // If the number of played chards between the two structs is different
+    // Then capture that in the checker struct
     if( prevGame->playedCardCount != postGame->playedCardCount ){
         infoHolder->numPlayedCardCountCheck++;
     }
 
+    // If any of the supply count values for any of the cards is different
+    // Then capture that in the checker struct
     for( int i = 0; i < 27; i++ ){
         if( prevGame->supplyCount[i] != postGame->supplyCount[i] ){
             infoHolder->supplyCardCheck++;
@@ -52,6 +70,8 @@ void compareStructs( struct gameState *prevGame, struct gameState *postGame, str
         }
     }
 
+    // If any of the deck counts between any of the players is different
+    // Then capture that in the checker struct
     for( int i = 0; i < postGame->numPlayers; i++ ){
         if( prevGame->deckCount[i] != postGame->deckCount[i] ){
             infoHolder->deckCountCheck++;
@@ -59,6 +79,8 @@ void compareStructs( struct gameState *prevGame, struct gameState *postGame, str
         }
     }
 
+    // If any of the discard counts between any of the players is different
+    // Then capture that in the checker struct
     for( int i = 0; i < postGame->numPlayers; i++ ){
         if( prevGame->discardCount[i] != postGame->discardCount[i] ){
             infoHolder->deckCountCheck++;
@@ -66,6 +88,8 @@ void compareStructs( struct gameState *prevGame, struct gameState *postGame, str
         }
     }
 
+    // If any of the cards in any of the players' discard piles are different
+    // Then capture that in the checker struct
     for( int i = 0; i < postGame->numPlayers; i++ ){
         int stop = 0;
         if( stop ){
@@ -78,6 +102,9 @@ void compareStructs( struct gameState *prevGame, struct gameState *postGame, str
             }
         }
     }
+
+    // If any of the hand counts between any of the players is different
+    // Then capture that in the checker struct
     for( int i = 0; i < postGame->numPlayers; i++ ){
         if( prevGame->handCount[i] != postGame->handCount[i] ){
             infoHolder->handCountCheck++;
@@ -85,6 +112,8 @@ void compareStructs( struct gameState *prevGame, struct gameState *postGame, str
         }
     }
 
+    // If any of the cards in any of the players' hand piles are different
+    // Then capture that in the checker struct
     for( int i = 0; i < postGame->numPlayers; i++ ){
         int stop = 0;
         if( stop ){
@@ -92,7 +121,7 @@ void compareStructs( struct gameState *prevGame, struct gameState *postGame, str
         }
         for( int j = 0; j < postGame->handCount[i]; j++ ) {
             if( prevGame->hand[i][j] != postGame->hand[i][j] ){
-                infoHolder->handCheck;
+                infoHolder->handCheck++;
                 break;
             }
         }
@@ -100,6 +129,11 @@ void compareStructs( struct gameState *prevGame, struct gameState *postGame, str
 
 }
 
+
+/*
+    A function that randomies the variables of a gameState struct
+    in the allowed domain of each variable.
+ */
 void randomizeGameState( struct gameState *g ){
 
     g->numActions = rand() % INT_MAX - 10;
@@ -122,9 +156,13 @@ void randomizeGameState( struct gameState *g ){
             g->discard[i][j] = rand() % 27;
         }
     }
+
+    // We constrain this in our testing so that we can encounter more bugs in
+    // the dominion.c version of this code
     for( int i = 0; i < g->numPlayers; i++ ){
-        g->handCount[i] = 5;
+        g->handCount[i] = rand() % 5;
     }
+
     for( int i = 0; i < g->numPlayers; i++ ){
         for( int j = 0; j < g->handCount[i]; j++ ) {
             g->hand[i][j] = rand() % 27;
@@ -133,6 +171,9 @@ void randomizeGameState( struct gameState *g ){
 
 }
 
+/*
+    A helper function that lets us see how many failures our tests encountered and where those failures were.
+ */
 void printResults( int failures, struct checker *infoH ){
 
     printf( "There were %d total failures\n", failures );
@@ -149,6 +190,82 @@ void printResults( int failures, struct checker *infoH ){
 
 }
 
+int oracle( int choice1, int choice2, struct gameState *prevGameState, struct gameState *game, struct checker *holding ){
+
+    int failure = 0;
+        if( choice1 == 1 ){
+
+            int currentPlayer = whoseTurn( prevGameState );
+            prevGameState->numBuys++;//Increase buys by 1!
+                int p = 0;//Iterator for hand!
+                int card_not_discarded = 1;//Flag for discard set!
+
+                while(card_not_discarded){
+
+                if (prevGameState->hand[currentPlayer][p] == estate){//Found an estate card!
+
+                   prevGameState->coins += 4;//Add 4 coins to the amount of coins
+                    prevGameState->discard[currentPlayer][prevGameState->discardCount[currentPlayer]] = prevGameState->hand[currentPlayer][p];
+                    prevGameState->discardCount[currentPlayer]++;
+
+                    for (;p < prevGameState->handCount[currentPlayer]; p++){
+                    prevGameState->hand[currentPlayer][p] = prevGameState->hand[currentPlayer][p+1];
+                    }
+
+                    prevGameState->hand[currentPlayer][prevGameState->handCount[currentPlayer]] = -1;
+                    prevGameState->handCount[currentPlayer]--;
+                    card_not_discarded = 0;//Exit the loop
+                }
+                else if (p > prevGameState->handCount[currentPlayer]){
+
+                    if (supplyCount(estate, prevGameState) > 0){
+                        gainCard(estate, prevGameState, 0, currentPlayer);
+                        prevGameState->supplyCount[estate]--;//Decrement estates
+
+                    if (supplyCount(estate, prevGameState) == 0){
+                        isGameOver(prevGameState);
+                    }
+                    }
+                    card_not_discarded = 0;//Exit the loop
+                }
+                    
+                else{
+                    p++;//Next card
+                }
+                }
+
+            int result = memcmp(prevGameState, game, sizeof(struct gameState));
+            if( result != 0 ){
+                failure = 1;
+                compareStructs( prevGameState, game, holding );
+            } else {
+                //printf("succeeded\n");
+            }
+
+        } else {
+            prevGameState->numBuys++;
+            int currentPlayer = whoseTurn( prevGameState );
+            if (supplyCount(estate, prevGameState) > 0){
+
+                gainCard(estate, prevGameState, 0, currentPlayer);//Gain an estate
+                prevGameState->supplyCount[estate]--;//Decrement Estates
+
+                if (supplyCount(estate, prevGameState) == 0){
+                    isGameOver(prevGameState);
+                }
+
+            }
+            int result = memcmp(prevGameState, game, sizeof(struct gameState));
+            if( result != 0 ){
+                failure = 1;
+                compareStructs( prevGameState, game, holding );
+            }
+        }
+
+    return failure;
+}
+
+
 int main(){
 
     // Initialize variables here
@@ -161,13 +278,12 @@ int main(){
     int result = 0;
     int handPos = 0, bonus = 0, choice1 = 0, choice2 = 0, choice3 = 0;
     int estateSupply;
-    int cardPlayed = 0, buysAdded = 0, coinCheck = 0, extraEstateCheck = 0, discardPileCheck;
     int failures = 0;
 
     // Seed a random number generator - I don't think this is necessary, but it's good practice 
     srand(time(NULL));
 
-    for( int i = 0; i < 500; i++ ){
+    for( int i = 0; i < 10000; i++ ){
 
         // Generate random numbers between 0 and 1 for our choice1 variable
         choice1 = rand() % 2;
@@ -210,80 +326,8 @@ int main(){
 
         // Play the card
         result = cardEffect( baron, choice1, choice2, choice3, &game, handPos, &bonus );
-        //printf( "Playing the card with choice1 set to %d and choice2 set to %d ", choice1, choice2 );
-        //customAssert( result );
 
-        // card playing check, buy check, coin check, extra estate check
-
-        //If we decide to discard an estate
-        if( choice1 == 1 ){
-
-            int currentPlayer = whoseTurn( &prevGameState );
-            prevGameState.numBuys++;//Increase buys by 1!
-                int p = 0;//Iterator for hand!
-                int card_not_discarded = 1;//Flag for discard set!
-
-                while(card_not_discarded){
-
-                if (prevGameState.hand[currentPlayer][p] == estate){//Found an estate card!
-
-                   prevGameState.coins += 4;//Add 4 coins to the amount of coins
-                    prevGameState.discard[currentPlayer][prevGameState.discardCount[currentPlayer]] = prevGameState.hand[currentPlayer][p];
-                    prevGameState.discardCount[currentPlayer]++;
-
-                    for (;p < prevGameState.handCount[currentPlayer]; p++){
-                    prevGameState.hand[currentPlayer][p] = prevGameState.hand[currentPlayer][p+1];
-                    }
-
-                    prevGameState.hand[currentPlayer][prevGameState.handCount[currentPlayer]] = -1;
-                    prevGameState.handCount[currentPlayer]--;
-                    card_not_discarded = 0;//Exit the loop
-                }
-                else if (p > prevGameState.handCount[currentPlayer]){
-
-                    if (supplyCount(estate, &prevGameState) > 0){
-                        gainCard(estate, &prevGameState, 0, currentPlayer);
-                        prevGameState.supplyCount[estate]--;//Decrement estates
-
-                    if (supplyCount(estate, &prevGameState) == 0){
-                        isGameOver(&prevGameState);
-                    }
-                    }
-                    card_not_discarded = 0;//Exit the loop
-                }
-                    
-                else{
-                    p++;//Next card
-                }
-                }
-
-            int result = memcmp(&prevGameState, &game, sizeof(struct gameState));
-            if( result != 0 ){
-                failures++;
-                compareStructs( &prevGameState, &game, &holding );
-            } else {
-                //printf("succeeded\n");
-            }
-
-        } else {
-            prevGameState.numBuys++;
-            int currentPlayer = whoseTurn( &prevGameState );
-            if (supplyCount(estate, &prevGameState) > 0){
-
-                gainCard(estate, &prevGameState, 0, currentPlayer);//Gain an estate
-                prevGameState.supplyCount[estate]--;//Decrement Estates
-
-                if (supplyCount(estate, &prevGameState) == 0){
-                    isGameOver(&prevGameState);
-                }
-
-            }
-            int result = memcmp(&prevGameState, &game, sizeof(struct gameState));
-            if( result != 0 ){
-                failures++;
-                compareStructs( &prevGameState, &game, &holding );
-            }
-        }
+        failures += oracle( choice1, choice2, &prevGameState, &game, &holding );
 
 
     }

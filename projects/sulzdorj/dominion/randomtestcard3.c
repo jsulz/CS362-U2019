@@ -138,13 +138,89 @@ void randomizeGameState( struct gameState *g ){
         }
     }
     for( int i = 0; i < g->numPlayers; i++ ){
-        g->handCount[i] = 5;
+        g->handCount[i] = rand() % MAX_HAND;
     }
     for( int i = 0; i < g->numPlayers; i++ ){
         for( int j = 0; j < g->handCount[i]; j++ ) {
             g->hand[i][j] = rand() % 27;
         }
     }
+
+}
+
+int oracle( int choice1, int choice2, int currentPlayer, int nextPlayer, int *tributeRevealedCards, struct gameState *prevGameState, struct gameState *game, struct checker *holding ){
+
+    int failure = 0;
+
+
+    if ((prevGameState->discardCount[nextPlayer] + prevGameState->deckCount[nextPlayer]) <= 1){
+
+        if (prevGameState->deckCount[nextPlayer] > 0){
+        tributeRevealedCards[0] = prevGameState->deck[nextPlayer][prevGameState->deckCount[nextPlayer]-1];
+        prevGameState->deckCount[nextPlayer]--;
+        }
+        else if (prevGameState->discardCount[nextPlayer] > 0){
+        tributeRevealedCards[0] = prevGameState->discard[nextPlayer][prevGameState->discardCount[nextPlayer]-1];
+        prevGameState->discardCount[nextPlayer]--;
+        }
+        else{
+        //No Card to Reveal
+        }
+
+    } else{
+
+        if (prevGameState->deckCount[nextPlayer] == 0){
+        for (int i = 0; i < prevGameState->discardCount[nextPlayer]; i++){
+            prevGameState->deck[nextPlayer][i] = prevGameState->discard[nextPlayer][i];//Move to deck
+            prevGameState->deckCount[nextPlayer]++;
+            prevGameState->discard[nextPlayer][i] = -1;
+            prevGameState->discardCount[nextPlayer]--;
+        }
+
+        shuffle(nextPlayer,prevGameState);//Shuffle the deck
+        } 
+
+        tributeRevealedCards[0] = prevGameState->deck[nextPlayer][prevGameState->deckCount[nextPlayer]-1];
+        prevGameState->deck[nextPlayer][prevGameState->deckCount[nextPlayer]--] = -1;
+        prevGameState->deckCount[nextPlayer]--;
+
+        tributeRevealedCards[1] = prevGameState->deck[nextPlayer][prevGameState->deckCount[nextPlayer]-1];
+        prevGameState->deck[nextPlayer][prevGameState->deckCount[nextPlayer]--] = -1;
+        prevGameState->deckCount[nextPlayer]--;
+
+    }    
+
+    if (tributeRevealedCards[0] == tributeRevealedCards[1]){//If we have a duplicate card, just drop one 
+        prevGameState->playedCards[prevGameState->playedCardCount] = tributeRevealedCards[1];
+        prevGameState->playedCardCount++;
+        tributeRevealedCards[1] = -1;
+    }
+
+    // Fixed this loop so that it doesn't go out of bounds
+    for (int i = 0; i < 2; i ++){
+        if (tributeRevealedCards[i] == copper || tributeRevealedCards[i] == silver || tributeRevealedCards[i] == gold ){//Treasure cards
+        prevGameState->coins += 2;
+        }
+        else if (tributeRevealedCards[i] == estate || tributeRevealedCards[i] == duchy || tributeRevealedCards[i] == province 
+                        || tributeRevealedCards[i] == gardens || tributeRevealedCards[i] == great_hall){//Victory Card Found
+            drawCard(currentPlayer, prevGameState);
+            drawCard(currentPlayer, prevGameState);
+        }
+        else{//Action Card
+        // fixed this so that we check to make sure this wasn't flagged for being a duplicate
+        if( tributeRevealedCards[i] != -1 ){
+            prevGameState->numActions = prevGameState->numActions + 2;
+        }
+        }
+    }
+
+    int result = memcmp(prevGameState, game, sizeof(struct gameState));
+    if( result != 0 ){
+        failure = 1;
+        compareStructs( prevGameState, game, holding );
+    }
+
+    return failure;
 
 }
 
@@ -158,7 +234,6 @@ int main(){
     struct gameState game;
     int result = 0;
     int handPos = 0, bonus = 0, choice1 = 0, choice2 = 0, choice3 = 0;
-    int supplyCount;
     int tributeRevealedCards[2] = {-1, -1};
     int failures = 0; 
     struct checker holding = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
@@ -166,7 +241,7 @@ int main(){
     // Seed a random number generator - I don't think this is necessary, but it's good practice 
     srand(time(NULL));
 
-    for( int i = 0; i < 500; i++ ){
+    for( int i = 0; i < 5000; i++ ){
 
         // Generate a random number of players between 2 and 4
         players = rand() % 2 + 2;
@@ -210,71 +285,7 @@ int main(){
         // Play the card
         result = cardEffect( tribute, choice1, choice2, choice3, &game, handPos, &bonus );
 
-        if ((prevGameState.discardCount[nextPlayer] + prevGameState.deckCount[nextPlayer]) <= 1){
-
-            if (prevGameState.deckCount[nextPlayer] > 0){
-            tributeRevealedCards[0] = prevGameState.deck[nextPlayer][prevGameState.deckCount[nextPlayer]-1];
-            prevGameState.deckCount[nextPlayer]--;
-            }
-            else if (prevGameState.discardCount[nextPlayer] > 0){
-            tributeRevealedCards[0] = prevGameState.discard[nextPlayer][prevGameState.discardCount[nextPlayer]-1];
-            prevGameState.discardCount[nextPlayer]--;
-            }
-            else{
-                //No Card to Reveal
-            }
-        } else{
-
-            if (prevGameState.deckCount[nextPlayer] == 0){
-            for (int i = 0; i < prevGameState.discardCount[nextPlayer]; i++){
-                prevGameState.deck[nextPlayer][i] = prevGameState.discard[nextPlayer][i];//Move to deck
-                prevGameState.deckCount[nextPlayer]++;
-                prevGameState.discard[nextPlayer][i] = -1;
-                prevGameState.discardCount[nextPlayer]--;
-            }
-
-            shuffle(nextPlayer,&prevGameState);
-            } 
-
-            tributeRevealedCards[0] = prevGameState.deck[nextPlayer][prevGameState.deckCount[nextPlayer]-1];
-            prevGameState.deck[nextPlayer][prevGameState.deckCount[nextPlayer]--] = -1;
-            prevGameState.deckCount[nextPlayer]--;
-
-            tributeRevealedCards[1] = prevGameState.deck[nextPlayer][prevGameState.deckCount[nextPlayer]-1];
-            prevGameState.deck[nextPlayer][prevGameState.deckCount[nextPlayer]--] = -1;
-            prevGameState.deckCount[nextPlayer]--;
-
-        }    
-
-        if (tributeRevealedCards[0] == tributeRevealedCards[1]){//If we have a duplicate card, just drop one 
-            prevGameState.playedCards[prevGameState.playedCardCount] = tributeRevealedCards[1];
-            prevGameState.playedCardCount++;
-            tributeRevealedCards[1] = -1;
-        }
-
-        // Fixed this loop so that it doesn't go out of bounds
-        for (int i = 0; i < 2; i ++){
-            if (tributeRevealedCards[i] == copper || tributeRevealedCards[i] == silver || tributeRevealedCards[i] == gold ){//Treasure cards
-            prevGameState.coins += 2;
-            }
-            else if (tributeRevealedCards[i] == estate || tributeRevealedCards[i] == duchy || tributeRevealedCards[i] == province 
-                            || tributeRevealedCards[i] == gardens || tributeRevealedCards[i] == great_hall){//Victory Card Found
-            drawCard(currentPlayer, &prevGameState);
-            drawCard(currentPlayer, &prevGameState);
-            }
-            else{//Action Card
-            // fixed this so that we check to make sure this wasn't flagged for being a duplicate
-            if( tributeRevealedCards[i] != -1 ){
-                prevGameState.numActions = prevGameState.numActions + 2;
-            }
-            }
-        }
-
-            int result = memcmp(&prevGameState, &game, sizeof(struct gameState));
-            if( result != 0 ){
-                failures++;
-                compareStructs( &prevGameState, &game, &holding );
-            }
+        failures += oracle( choice1, choice2, currentPlayer, nextPlayer, tributeRevealedCards, &prevGameState, &game, &holding);
 
     }
 
