@@ -1,6 +1,6 @@
 /*
     Author: Jared Sulzdorf
-    Test covers: playBaron() function in dominion.c
+    Test covers: playMinion() function in dominion.c
  */
 
 #include "dominion.h"
@@ -202,7 +202,7 @@ int oracle( int choice1, int choice2, int handPos, struct gameState *prevGameSta
             failure = 1;
             compareStructs( prevGameState, game, holding );
         } else {
-            //printf("succeeded\n");
+            
         }
     } 
     // Otherwise, we've chosen to discard our hand and get 4 more

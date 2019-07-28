@@ -307,22 +307,20 @@ int main(){
         // randomize all of the state variables in the game state
         randomizeGameState( &game );
 
-        // Copy the state of the game before playing the card so we can test it against the state of the game after playing the card
-        memcpy( &prevGameState, &game, sizeof( struct gameState ) );
-
         estateSupply = rand() % 5;
         game.supplyCount[estate] = estateSupply;
-        prevGameState.supplyCount[estate] = estateSupply;
 
         // If we have a situation where we can force a player's hand to encounter some bugs, let's do so
         if( choice1 == 1 && estateSupply == 2 ){
 
             for( int i = 0 ; i < game.handCount[0]; i++ ){
                 game.hand[0][i] = copper;
-                prevGameState.hand[0][i] = copper;
             }
 
         }
+
+        // Copy the state of the game before playing the card so we can test it against the state of the game after playing the card
+        memcpy( &prevGameState, &game, sizeof( struct gameState ) );
 
         // Play the card
         result = cardEffect( baron, choice1, choice2, choice3, &game, handPos, &bonus );

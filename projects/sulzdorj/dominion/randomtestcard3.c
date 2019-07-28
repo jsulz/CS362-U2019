@@ -1,6 +1,6 @@
 /*
     Author: Jared Sulzdorf
-    Test covers: playBaron() function in dominion.c
+    Test covers: playTribute() function in dominion.c
  */
 
 #include "dominion.h"
@@ -13,6 +13,10 @@
 #include "customAssert.h"
 #include <limits.h>
 
+
+/*
+    A struct that we use to note if a value in the gameState struct is off.
+ */
 struct checker {
     int numActionCheck;
     int numCoinCheck;
@@ -26,6 +30,13 @@ struct checker {
     int handCheck;
 };
 
+
+/*
+    Function that takes in the previous game state (after updating it with the oracle function),
+    the game state after playing the card with the cardEffect() function, and the checker struct.
+    Where the structs do not match, we increment a variable in the checker struct so that we can keep 
+    track of how the test failed. 
+ */
 void compareStructs( struct gameState *prevGame, struct gameState *postGame, struct checker *infoHolder ){
 
     if( prevGame->numActions != postGame->numActions ){
@@ -99,6 +110,10 @@ void compareStructs( struct gameState *prevGame, struct gameState *postGame, str
 
 }
 
+
+/*
+    A helper function that lets us see how many failures our tests encountered and where those failures were.
+ */
 void printResults( int failures, struct checker *infoH ){
 
     printf( "There were %d total failures\n", failures );
@@ -115,6 +130,10 @@ void printResults( int failures, struct checker *infoH ){
 
 }
 
+/*
+    A function that randomies the variables of a gameState struct
+    in the allowed domain of each variable.
+ */
 void randomizeGameState( struct gameState *g ){
 
     g->numActions = rand() % INT_MAX - 10;
