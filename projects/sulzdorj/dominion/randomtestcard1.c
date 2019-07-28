@@ -13,6 +13,93 @@
 #include "customAssert.h"
 #include <limits.h>
 
+
+struct checker {
+    int numActionCheck;
+    int numCoinCheck;
+    int numBuysCheck;
+    int numPlayedCardCountCheck;
+    int supplyCardCheck;
+    int deckCountCheck;
+    int discardCountCheck;
+    int discardCheck;
+    int handCountCheck;
+    int handCheck;
+};
+
+void compareStructs( struct gameState *prevGame, struct gameState *postGame, struct checker *infoHolder ){
+
+    if( prevGame->numActions != postGame->numActions ){
+        infoHolder->numActionCheck++;
+    }
+
+    if( prevGame->coins != postGame->coins ){
+        infoHolder->numCoinCheck++;
+    }
+
+    if( prevGame->numBuys != postGame->numBuys ){
+        infoHolder->numBuysCheck++;
+    }
+
+    if( prevGame->playedCardCount != postGame->playedCardCount ){
+        infoHolder->numPlayedCardCountCheck++;
+    }
+
+    for( int i = 0; i < 27; i++ ){
+        if( prevGame->supplyCount[i] != postGame->supplyCount[i] ){
+            infoHolder->supplyCardCheck++;
+            break;
+        }
+    }
+
+    for( int i = 0; i < postGame->numPlayers; i++ ){
+        if( prevGame->deckCount[i] != postGame->deckCount[i] ){
+            infoHolder->deckCountCheck++;
+            break;
+        }
+    }
+
+    for( int i = 0; i < postGame->numPlayers; i++ ){
+        if( prevGame->discardCount[i] != postGame->discardCount[i] ){
+            infoHolder->deckCountCheck++;
+            break;
+        }
+    }
+
+    for( int i = 0; i < postGame->numPlayers; i++ ){
+        int stop = 0;
+        if( stop ){
+            break;
+        }
+        for( int j = 0; j < postGame->discardCount[i]; j++ ) {
+            if( prevGame->discard[i][j] != postGame->discard[i][j] ){
+                infoHolder->discardCheck++;
+                break;
+            }
+        }
+    }
+    for( int i = 0; i < postGame->numPlayers; i++ ){
+        if( prevGame->handCount[i] != postGame->handCount[i] ){
+            infoHolder->handCountCheck++;
+            break;
+        }
+    }
+
+    for( int i = 0; i < postGame->numPlayers; i++ ){
+        int stop = 0;
+        if( stop ){
+            break;
+        }
+        for( int j = 0; j < postGame->handCount[i]; j++ ) {
+            if( prevGame->hand[i][j] != postGame->hand[i][j] ){
+                infoHolder->handCheck;
+                break;
+            }
+        }
+    }
+
+}
+
 void randomizeGameState( struct gameState *g ){
 
     g->numActions = rand() % INT_MAX - 10;
@@ -36,14 +123,29 @@ void randomizeGameState( struct gameState *g ){
         }
     }
     for( int i = 0; i < g->numPlayers; i++ ){
-        for( int j = 0; j < MAX_DECK; j++ ) {
+        g->handCount[i] = 5;
+    }
+    for( int i = 0; i < g->numPlayers; i++ ){
+        for( int j = 0; j < g->handCount[i]; j++ ) {
             g->hand[i][j] = rand() % 27;
         }
     }
-    for( int i = 0; i < g->numPlayers; i++ ){
-        g->handCount[i] = rand() % MAX_HAND;
-    }
 
+}
+
+void printResults( int failures, struct checker *infoH ){
+
+    printf( "There were %d total failures\n", failures );
+    printf( "In %d iterations of playing the Baron card, the number of actions were incorrect\n", infoH->numActionCheck );
+    printf( "In %d iterations of playing the Baron card, the number of coins were incorrect\n", infoH->numCoinCheck );
+    printf( "In %d iterations of playing the Baron card, the number of buys were incorrect\n", infoH->numBuysCheck );
+    printf( "In %d iterations of playing the Baron card, the played cards were incorrect\n", infoH->numPlayedCardCountCheck );
+    printf( "In %d iterations of playing the Baron card, the supply cards were incorrect\n", infoH->supplyCardCheck );
+    printf( "In %d iterations of playing the Baron card, the players deck count were incorrect\n", infoH->deckCountCheck );
+    printf( "In %d iterations of playing the Baron card, the players discard counts were incorrect\n", infoH->discardCountCheck );
+    printf( "In %d iterations of playing the Baron card, the players discard piles were incorrect\n", infoH->discardCheck );
+    printf( "In %d iterations of playing the Baron card, the players hands counts were incorrect\n", infoH->handCountCheck );
+    printf( "In %d iterations of playing the Baron card, the players hands were incorrect\n", infoH->handCountCheck );
 
 }
 
@@ -55,9 +157,12 @@ int main(){
     int seed = 2;
     struct gameState prevGameState;
     struct gameState game;
+    struct checker holding = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
     int result = 0;
     int handPos = 0, bonus = 0, choice1 = 0, choice2 = 0, choice3 = 0;
-    int supplyCount;
+    int estateSupply;
+    int cardPlayed = 0, buysAdded = 0, coinCheck = 0, extraEstateCheck = 0, discardPileCheck;
+    int failures = 0;
 
     // Seed a random number generator - I don't think this is necessary, but it's good practice 
     srand(time(NULL));
@@ -84,69 +189,106 @@ int main(){
         result = initializeGame( players, kingdomCards, seed, &game );
 
         // randomize all of the state variables in the game state
+        randomizeGameState( &game );
 
         // Copy the state of the game before playing the card so we can test it against the state of the game after playing the card
         memcpy( &prevGameState, &game, sizeof( struct gameState ) );
 
-        supplyCount = rand() % 5;
-        game.supplyCount[estate] = supplyCount;
+        estateSupply = rand() % 5;
+        game.supplyCount[estate] = estateSupply;
+        prevGameState.supplyCount[estate] = estateSupply;
 
         // If we have a situation where we can force a player's hand to encounter some bugs, let's do so
-        if( choice1 == 1 && supplyCount == 2 ){
+        if( choice1 == 1 && estateSupply == 2 ){
 
             for( int i = 0 ; i < game.handCount[0]; i++ ){
                 game.hand[0][i] = copper;
+                prevGameState.hand[0][i] = copper;
             }
 
         }
 
         // Play the card
         result = cardEffect( baron, choice1, choice2, choice3, &game, handPos, &bonus );
-        printf( "Playing the card with choice1 set to %d and choice2 set to %d ", choice1, choice2 );
-        customAssert( result );
+        //printf( "Playing the card with choice1 set to %d and choice2 set to %d ", choice1, choice2 );
+        //customAssert( result );
+
+        // card playing check, buy check, coin check, extra estate check
 
         //If we decide to discard an estate
         if( choice1 == 1 ){
-            // Test to see if we got an additional buy
-            result = ( prevGameState.numBuys + 1 == game.numBuys ) ? 1 : -1;
-            printf( "\tTesting to see if there is one more buy " );
-            customAssert( result );
 
-            // If supplyCount is 2, then we know we should not have gotten more coins and instead should have
-            // recieved an additional estate card in our discard, so let's check that
-            if( supplyCount == 2 ){
+            int currentPlayer = whoseTurn( &prevGameState );
+            prevGameState.numBuys++;//Increase buys by 1!
+                int p = 0;//Iterator for hand!
+                int card_not_discarded = 1;//Flag for discard set!
 
-                // Check to make sure we didn't get more coins
-                result = ( prevGameState.coins == game.coins );
-                printf( "\tMaking sure we didn't get more coins " );
-                customAssert( result );
+                while(card_not_discarded){
 
-                // Check to make sure we got an estate
-                result = ( game.discard[0][0] == estate ) ? 1 : -1;
-                printf( "\tChecking to see if we got an extra estate card because our hand contains only coppers " );
-                customAssert( result );
+                if (prevGameState.hand[currentPlayer][p] == estate){//Found an estate card!
 
-            } 
-            // Otherwise, we should have got more coins
-            else {
-                // Test to see if we got more coins
-                result = ( prevGameState.coins + 4 == game.coins ) ? 1 : -1;
-                printf( "\tTesting to see if there are four more coins after discarding estate card ");
-                customAssert( result );
+                   prevGameState.coins += 4;//Add 4 coins to the amount of coins
+                    prevGameState.discard[currentPlayer][prevGameState.discardCount[currentPlayer]] = prevGameState.hand[currentPlayer][p];
+                    prevGameState.discardCount[currentPlayer]++;
 
+                    for (;p < prevGameState.handCount[currentPlayer]; p++){
+                    prevGameState.hand[currentPlayer][p] = prevGameState.hand[currentPlayer][p+1];
+                    }
+
+                    prevGameState.hand[currentPlayer][prevGameState.handCount[currentPlayer]] = -1;
+                    prevGameState.handCount[currentPlayer]--;
+                    card_not_discarded = 0;//Exit the loop
+                }
+                else if (p > prevGameState.handCount[currentPlayer]){
+
+                    if (supplyCount(estate, &prevGameState) > 0){
+                        gainCard(estate, &prevGameState, 0, currentPlayer);
+                        prevGameState.supplyCount[estate]--;//Decrement estates
+
+                    if (supplyCount(estate, &prevGameState) == 0){
+                        isGameOver(&prevGameState);
+                    }
+                    }
+                    card_not_discarded = 0;//Exit the loop
+                }
+                    
+                else{
+                    p++;//Next card
+                }
+                }
+
+            int result = memcmp(&prevGameState, &game, sizeof(struct gameState));
+            if( result != 0 ){
+                failures++;
+                compareStructs( &prevGameState, &game, &holding );
+            } else {
+                //printf("succeeded\n");
             }
 
         } else {
-            // otherwise, check to see if we got a new estate card
-            if( supplyCount == 2 ){
-                result = ( game.discard[0][0] == estate ) ? 1 : -1;
-                printf( "\tChecking to see if we got an extra estate card because we asked for it " );
-                customAssert( result );
-            } 
+            prevGameState.numBuys++;
+            int currentPlayer = whoseTurn( &prevGameState );
+            if (supplyCount(estate, &prevGameState) > 0){
+
+                gainCard(estate, &prevGameState, 0, currentPlayer);//Gain an estate
+                prevGameState.supplyCount[estate]--;//Decrement Estates
+
+                if (supplyCount(estate, &prevGameState) == 0){
+                    isGameOver(&prevGameState);
+                }
+
+            }
+            int result = memcmp(&prevGameState, &game, sizeof(struct gameState));
+            if( result != 0 ){
+                failures++;
+                compareStructs( &prevGameState, &game, &holding );
+            }
         }
 
 
     }
+
+    printResults( failures, &holding );
 
 
 }

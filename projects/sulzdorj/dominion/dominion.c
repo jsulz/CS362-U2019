@@ -896,10 +896,7 @@ int playTribute( struct gameState *state, int currentPlayer, int nextPlayer, int
       drawCard(currentPlayer, state);
     }
     else{//Action Card
-      // fixed this so that we check to make sure this wasn't flagged for being a duplicate
-      if( tributeRevealedCards[i] != -1 ){
-        state->numActions = state->numActions + 2;
-      }
+      state->numActions = state->numActions + 2;
     }
   }
  

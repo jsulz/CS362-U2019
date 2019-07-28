@@ -38,7 +38,10 @@ randomtestcard1: randomtestcard1.c customAssert.o dominion.o rngs.o
 randomtestcard2: randomtestcard2.c customAssert.o dominion.o rngs.o
 	gcc -o randomtestcard2 -g  randomtestcard2.c customAssert.o dominion.o rngs.o $(CFLAGS)
 
-randomtestresults: randomtestcard1 randomtestcard2
+randomtestcard3: randomtestcard3.c customAssert.o dominion.o rngs.o
+	gcc -o randomtestcard3 -g  randomtestcard3.c customAssert.o dominion.o rngs.o $(CFLAGS)
+
+randomtestresults: randomtestcard1 randomtestcard2 randomtestcard3
 
 	echo "randomtestcard1: " >> randomtestresults.out
 	./randomtestcard1 >> randomtestresults.out
@@ -46,6 +49,10 @@ randomtestresults: randomtestcard1 randomtestcard2
 
 	echo "randomtestcard2: " >> randomtestresults.out
 	./randomtestcard2 >> randomtestresults.out
+	echo >> randomtestresults.out
+
+	echo "randomtestcard3: " >> randomtestresults.out
+	./randomtestcard3 >> randomtestresults.out
 	echo >> randomtestresults.out
 
 	gcov -f -b dominion.c >> randomtestresults.out
@@ -58,5 +65,5 @@ all: playdom player
 
 clean:
 	rm -f *.o playdom.exe playdom player player.exe  *.gcov *.gcda *.gcno *.so *.out testDrawCard testDrawCard.exe
-	rm -f randomtestcard1
+	rm -f randomtestcard1 randomtestcard2 randomtestcard3
 	rm -rf *.dSYM
