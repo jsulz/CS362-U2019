@@ -445,22 +445,37 @@ public class UrlValidator implements Serializable {
         }
 
         if (!PATH_PATTERN.matcher(path).matches()) {
-            return false;
+            return false; 
         }
 
         try {
             URI uri = new URI(null,null,path,null);
             String norm = uri.normalize().getPath();
+            /*
+             * 
+             */
             if (norm.startsWith("/../") // Trying to go via the parent dir 
              || norm.equals("/..")) {   // Trying to go to the parent dir
-                return false;
+            	/*
+            	 * Unit Test Bug #1 - this introduces a bug where the UrlValidator belies that /../
+            	 * and /.. are both valid patterns inside URLs
+            	 * 
+            	 * Previously, this was: return false;
+            	 */
+                return true;
             }
         } catch (URISyntaxException e) {
             return false;
         }
         
         int slash2Count = countToken("//", path);
-        if (isOff(ALLOW_2_SLASHES) && (slash2Count > 0)) {
+        /*
+         * Unit Test Bug #2 - this introduces a bug where the UrlValidator believes that if the 
+         * ALLOW_2_SLASHES flag is on and there are two slashes, then it's actually an invalid URL
+         * 
+         * Previously, the if statement was: if (isOff(ALLOW_2_SLASHES) && (slash2Count > 0))
+         */
+        if (!isOff(ALLOW_2_SLASHES) && (slash2Count > 0)) {
             return false;
         }
 

@@ -15,6 +15,13 @@
  * limitations under the License.
  */
 
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
 import junit.framework.TestCase;
 
 /**
@@ -37,8 +44,62 @@ protected void setUp() {
          testPartsIndex[index] = 0;
       }
    }
+   
+   /*
+   * Unit Test Method for CS362
+   */
+	public void testUnitTesting() throws IOException {
+		
+		// Put together the options for the UrlValidator and create an instance with those options
+		long options = UrlValidator.ALLOW_2_SLASHES + UrlValidator.ALLOW_ALL_SCHEMES + UrlValidator.NO_FRAGMENTS;
+		UrlValidator urlVal = new UrlValidator(null, null, options);
+		
+		// Read from a CSV named "urlFileOptionalSchemes.csv"
+		// Note: This file must be placed in the same directory as where the .project folder resides
+		BufferedReader csvReader = new BufferedReader(new FileReader("urlFileOptionalSchemes.csv"));
+		
+		// An ArrayList of ResultPair objects that will store all of the results from reading the CSV
+		List<ResultPair> resultPairList = new ArrayList<ResultPair>();
+		// Holds each row of data in the CSV as plain text
+		String row;
+		
+		// While there is data to read in the CSV file, read from it
+		while ((row = csvReader.readLine()) != null) {
+			// Take the data passed and split on the "," delimiter
+		    String[] data = row.split(",");
+		    // Convert the string version of the boolean to a real boolean
+		    boolean resultPairBool = Boolean.parseBoolean( data[1] );
+		    // Create a new ResultPair object with the row of data and add it to the ArrayList
+		    resultPairList.add( new ResultPair( data[0], resultPairBool ) );
+		}
+		
+		// Close the CSV
+		csvReader.close();
+		
+		// Loop over all of the elements in the ArrayList and, for each one
+		for( int i = 0; i < resultPairList.size(); i++ ) {
+			// Get the current element we're concerned with
+			ResultPair getting = resultPairList.get(i);
+			// Get the URL as a string and the expected validity of the URL
+			String url = getting.item;
+			boolean expected = getting.valid;
+			
+			// Pass the URL to the isValid() method in the UrlValidator class to get it's understanding of the URL validity
+			boolean isValidResult = urlVal.isValid( url );
+			// Try to compare the isValid() result with our own understanding of the string
+			try {
+				assertEquals( url, expected, isValidResult );	
+			} 
+			// And if there is an error, catch it here so that we can insert a debugging statement
+			// and continue the execution of the program or just print it out to the console
+			catch (AssertionError e ) {
+				System.out.println( e );
+			}
+		}
+		
+	}
 
-   public void testIsValid() {
+   public void testIsValid() /*throws IOException*/ {
         testIsValid(testUrlParts, UrlValidator.ALLOW_ALL_SCHEMES);
         setUp();
         long options =
@@ -78,9 +139,13 @@ protected void setUp() {
     * running through all possible permutations of their combinations.
     *
     * @param testObjects Used to create a url.
+ * @throws IOException 
     */
-   public void testIsValid(Object[] testObjects, long options) {
-      UrlValidator urlVal = new UrlValidator(null, null, options);
+   public void testIsValid(Object[] testObjects, long options) /*throws IOException*/ {
+	   // Create an instance of FileWriter to write a CSV
+	   //FileWriter fileWriter = new FileWriter("urlFileOptionalSchemes.csv");
+	   
+	   UrlValidator urlVal = new UrlValidator(null, null, options);
       assertTrue(urlVal.isValid("http://www.google.com"));
       assertTrue(urlVal.isValid("http://www.google.com/"));
       int statusPerLine = 60;
@@ -98,6 +163,26 @@ protected void setUp() {
             expected &= part[index].valid;
          }
          String url = testBuffer.toString();
+         /*
+         // Change the boolean to a string for storage in a CSV
+         String bool;
+         if( expected ) {
+        	 bool = "true";
+         } else {
+        	 bool = "false";
+         }
+         
+         // Write the url and boolean in a url,bool pair for each line in the CSV
+         try {
+        	 fileWriter.append(url);
+			fileWriter.append(",");
+			fileWriter.append( bool );
+	         fileWriter.append("\n");
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}*/
+         
          boolean result = urlVal.isValid(url);
          assertEquals(url, expected, result);
          if (printStatus) {
@@ -120,6 +205,8 @@ protected void setUp() {
       if (printStatus) {
          System.out.println();
       }
+      /*fileWriter.flush();
+      fileWriter.close();*/
    }
 
    public void testValidator202() {
