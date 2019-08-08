@@ -77,7 +77,13 @@ public class UrlValidator implements Serializable {
 
     private static final long serialVersionUID = 7557161713937335013L;
 
-    private static final int MAX_UNSIGNED_16_BIT_INT = 0xFFFF; // port max
+    /*
+     *Random Test Bug #1 - this introduces a bug where the UrlValidator reduces the 
+     *port max from 65536 to 4095
+     * 
+     * Previously, the declaration for this was: private static final int MAX_UNSIGNED_16_BIT_INT = 0xFFFF; // port max
+     */
+    private static final int MAX_UNSIGNED_16_BIT_INT = 0xFFF; // port max
 
     /**
      * Allows all validly formatted schemes to pass validation instead of
